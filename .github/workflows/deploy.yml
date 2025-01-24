@@ -1,0 +1,52 @@
+name: My Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          clean: false
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Set up NPM authentication
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          cat ~/.npmrc
+
+      - name: Install Dependencies
+        run: yarn install --pure-lockfile --ignore-scripts
+
+      - name: Build Web App
+        run: yarn build
+
+      - name: Set up Firebase Service Account
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYPROJECT }}' > app/web/firebase-service-account.json
+
+      - name: Deploy to Firebase Hosting
+        env:
+          SITE: 'https://myproject.web.app'
+        run: |
+          cd app/web
+          export GOOGLE_APPLICATION_CREDENTIALS=$PWD/firebase-service-account.json
+          npx firebase use --add myproject
+          npx firebase target:apply hosting myproject myproject
+          npx firebase experiments:enable webframeworks
+          yarn deploy:ci

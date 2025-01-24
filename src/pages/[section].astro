@@ -1,0 +1,54 @@
+---
+export function getStaticPaths() {
+    return [
+        { params: { section: "sport" } },
+        { params: { section: "anime" } },
+        { params: { section: "abstract" } },
+        { params: {section : "game" } },
+    ];
+}
+
+const { section } = Astro.params;
+import { fetchWalpapers } from '../firebaseconfig';
+
+import Menu from './menu.astro'
+const walpapers = await fetchWalpapers();
+---
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi página con Firebase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <Menu />
+  <div class="container mx-auto py-8 px-4">
+    <h1 class="text-3xl font-bold text-center mb-6">Wallpapers</h1>
+    {walpapers ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.keys(walpapers).filter((id) => walpapers[id].section == section).map((id) => {
+          const post = walpapers[id];
+          return (
+            <div key={id} class="bg-white rounded-lg shadow-md overflow-hidden">
+              <img
+                src={post.img}
+                alt={`Imagen de ${post.title}`}
+                class="w-full h-60 object-cover"
+                loading="lazy"
+              />
+              <div class="p-4">
+                <a href={`/blog/${post.id}`} class="text-xl font-semibold mb-2">{post.title}</a>
+                <p class="text-gray-600">Likes: <span class="font-bold">{post.likes}</span></p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <p class="text-center text-gray-500">No hay wallpapers disponibles.</p>
+    )}
+  </div>
+</body>
+</html>

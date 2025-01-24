@@ -1,0 +1,58 @@
+---
+import walpapers from './../../api.json';
+import { fetchWalpapers, updateLikes } from './../../firebaseconfig.js';
+import Menu from './../menu.astro';
+import LikeUpdate from './../../components/Like';
+import WallpaperLikeButton from './../../components/Like';
+
+export function getStaticPaths() {
+  return Object.keys(walpapers.walpapers).map((key) => ({
+    params: { article: walpapers.walpapers[key].id.toString() },
+  }));
+}
+
+const { article } = Astro.params;
+const wallpaper = await fetchWalpapers();
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles del Wallpaper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <Menu />
+    <div class="flex justify-center items-center min-h-screen bg-gray-100 py-8 px-4">
+      <div class="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-4xl transform transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/40">
+        {wallpaper ? (
+          <img
+            src={wallpaper[`image${article}`].img}
+            alt={`Imagen de ${wallpaper[`image${article}`].title}`}
+            class="w-full h-[700px] object-contain rounded-t-3xl transition-transform duration-500 ease-in-out transform hover:scale-110 hover:rotate-3 select-none"
+            loading="lazy"
+          />
+        ) : (
+          <p class="text-center text-gray-500 py-8 text-xl font-semibold">No se encontró el wallpaper.</p>
+        )}
+        {wallpaper && (
+          <div class="p-10 bg-gradient-to-r from-blue-100 via-white to-blue-100 rounded-b-3xl shadow-lg">
+            <h2 class="text-4xl font-semibold text-gray-800 mb-6 text-shadow-lg">{wallpaper[`image${article}`].title}</h2>
+            <p class="text-lg text-gray-600 mb-4">Likes: <span class="font-bold text-blue-600">{wallpaper[`image${article}`].likes}</span></p>
+            <p class="text-lg text-gray-600 mb-6">Sección: <span class="font-semibold text-gray-700">{wallpaper[`image${article}`].section}</span></p>
+            <p class="text-lg text-gray-600 mb-6">Body:<span class="font-semibold text-gray-700">{wallpaper[`image${article}`].body}</span></p>
+            <!-- Botón de like -->
+            <WallpaperLikeButton client:load id={wallpaper[`image${article}`].id} />
+          </div>
+        )}
+      </div>
+      <button class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-full shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 focus:outline-none focus:ring-4 focus:ring-purple-300 absolute right-[28%]">
+        <a class="text-3xl" href={`/blog/${wallpaper[`image${article}`].id+1}`}>&gt</a>
+      </button>
+      <button class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-full shadow-md transition-all duration-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 focus:outline-none focus:ring-4 focus:ring-purple-300 absolute left-[28%]">
+        <a class="text-3xl" href={`/blog/${wallpaper[`image${article}`].id - 1}`} class="text-white">&lt</a>
+      </button>      
+    </div>      
+  </body>
+</html>
